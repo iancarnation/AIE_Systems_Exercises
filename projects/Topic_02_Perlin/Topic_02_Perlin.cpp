@@ -48,7 +48,7 @@ bool Topic_02_Perlin::onCreate(int a_argc, char* a_argv[])
 	glDeleteShader(cs);
 	glDeleteShader(es);
 
-	// noise ---------------------------------------------------------
+	// 2D noise ---------------------------------------------------------
 	m_dimensions = glm::ivec2(256, 256);
 	m_height = new float[m_dimensions.x * m_dimensions.y];
 
