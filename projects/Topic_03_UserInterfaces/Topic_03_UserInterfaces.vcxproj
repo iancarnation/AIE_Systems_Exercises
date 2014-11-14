@@ -39,8 +39,8 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>$(SolutionDir)../inc;$(SolutionDir)../dep/soil/src;$(SolutionDir)../dep/glfw/include;$(SolutionDir)../dep/glew/include;$(SolutionDir)../dep/glm;$(VCInstallDir)include;$(VCInstallDir)atlmfc\include;$(WindowsSDK_IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)../lib/vs2013;$(SolutionDir)../dep/soil/lib/vs2012;$(SolutionDir)../dep/glew/lib/Release/Win32;$(SolutionDir)../dep/glfw/lib-msvc110;$(VCInstallDir)lib;$(VCInstallDir)atlmfc\lib;$(WindowsSDK_LibraryPath_x86)</LibraryPath>
+    <IncludePath>$(SolutionDir)../inc;$(SolutionDir)../dep/soil/src;$(SolutionDir)../dep/glfw/include;$(SolutionDir)../dep/glew/include;$(SolutionDir)../dep/glm;$(VCInstallDir)include;$(VCInstallDir)atlmfc\include;$(WindowsSDK_IncludePath);$(SolutionDir)../dep/stb</IncludePath>
+    <LibraryPath>$(SolutionDir)../lib/vs2013;$(SolutionDir)../dep/soil/lib/vs2012;$(SolutionDir)../dep/glew/lib/Release/Win32;$(SolutionDir)../dep/glfw/lib-msvc110;$(VCInstallDir)lib;$(VCInstallDir)atlmfc\lib;$(WindowsSDK_LibraryPath_x86);$(SolutionDir)../dep/stb</LibraryPath>
     <OutDir>$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -76,9 +76,15 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Topic_03_UserInterfaces.cpp" />
+    <ClCompile Include="UIButton.cpp" />
+    <ClCompile Include="UIElement.cpp" />
+    <ClCompile Include="UIRectangle.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Topic_03_UserInterfaces.h" />
+    <ClInclude Include="UIButton.h" />
+    <ClInclude Include="UIElement.h" />
+    <ClInclude Include="UIRectangle.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
