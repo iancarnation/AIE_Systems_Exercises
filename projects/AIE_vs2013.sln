@@ -17,6 +17,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Topic_02_Perlin", "Topic_02
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Topic_01_SceneManagement", "Topic_01_SceneManagement\Topic_01_SceneManagement.vcxproj", "{8F2E1661-C7CC-496C-A725-C8FAE64790CD}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Topic_03_UserInterfaces", "Topic_03_UserInterfaces\Topic_03_UserInterfaces.vcxproj", "{CD5302AF-E4F9-406B-B8B7-6CFA03A82989}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -39,6 +41,10 @@ Global
 		{8F2E1661-C7CC-496C-A725-C8FAE64790CD}.Debug|Win32.Build.0 = Debug|Win32
 		{8F2E1661-C7CC-496C-A725-C8FAE64790CD}.Release|Win32.ActiveCfg = Release|Win32
 		{8F2E1661-C7CC-496C-A725-C8FAE64790CD}.Release|Win32.Build.0 = Release|Win32
+		{CD5302AF-E4F9-406B-B8B7-6CFA03A82989}.Debug|Win32.ActiveCfg = Debug|Win32
+		{CD5302AF-E4F9-406B-B8B7-6CFA03A82989}.Debug|Win32.Build.0 = Debug|Win32
+		{CD5302AF-E4F9-406B-B8B7-6CFA03A82989}.Release|Win32.ActiveCfg = Release|Win32
+		{CD5302AF-E4F9-406B-B8B7-6CFA03A82989}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
