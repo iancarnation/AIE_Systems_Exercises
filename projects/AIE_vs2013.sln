@@ -19,6 +19,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Topic_01_SceneManagement", 
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Topic_03_UserInterfaces", "Topic_03_UserInterfaces\Topic_03_UserInterfaces.vcxproj", "{CD5302AF-E4F9-406B-B8B7-6CFA03A82989}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Topic_04_NavMesh", "Topic_04_NavMesh\Topic_04_NavMesh.vcxproj", "{21999237-13CE-44B7-8380-2FFA9F6D0727}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -45,6 +47,10 @@ Global
 		{CD5302AF-E4F9-406B-B8B7-6CFA03A82989}.Debug|Win32.Build.0 = Debug|Win32
 		{CD5302AF-E4F9-406B-B8B7-6CFA03A82989}.Release|Win32.ActiveCfg = Release|Win32
 		{CD5302AF-E4F9-406B-B8B7-6CFA03A82989}.Release|Win32.Build.0 = Release|Win32
+		{21999237-13CE-44B7-8380-2FFA9F6D0727}.Debug|Win32.ActiveCfg = Debug|Win32
+		{21999237-13CE-44B7-8380-2FFA9F6D0727}.Debug|Win32.Build.0 = Debug|Win32
+		{21999237-13CE-44B7-8380-2FFA9F6D0727}.Release|Win32.ActiveCfg = Release|Win32
+		{21999237-13CE-44B7-8380-2FFA9F6D0727}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
