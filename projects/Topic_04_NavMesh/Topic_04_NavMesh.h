@@ -20,6 +20,18 @@ protected:
 	virtual void onDraw();
 	virtual void onDestroy();
 
+	struct NavNodeTri
+	{
+		glm::vec3 position;
+		glm::vec3 vertices[3];
+		NavNodeTri* edgeTarget[3];
+	};
+
+	std::vector<NavNodeTri*> m_graph;
+
+	void buildNavMesh(FBXMeshNode* a_mesh,
+					  std::vector<NavNodeTri*>& a_graph);
+
 	void createOpenGLBuffers(FBXFile* a_fbx);
 	void cleanupOpenGLBuffers(FBXFile* a_fbx);
 

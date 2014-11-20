@@ -38,9 +38,11 @@ bool Topic_04_NavMesh::onCreate(int a_argc, char* a_argv[])
 	m_sponza->load("./resources/models/SponzaSimple.fbx", FBXFile::UNITS_CENTIMETER);
 	createOpenGLBuffers(m_sponza);
 
-	m_navMesh - new FBXFile();
+	m_navMesh = new FBXFile();
 	m_navMesh->load("./resources/models/SponzaSimpleNavMesh.fbx", FBXFile::UNITS_CENTIMETER);
 	// createOpenGLBuffers(m_navMesh);
+
+	buildNavMesh(m_navMesh->getMeshByIndex(0), m_graph);
 
 	unsigned int vertShader = Utility::loadShader("./resources/shaders/sponza.vert", GL_VERTEX_SHADER);
 	unsigned int fragShader = Utility::loadShader("./resources/shaders/sponza.frag", GL_FRAGMENT_SHADER);
@@ -71,6 +73,28 @@ void Topic_04_NavMesh::onUpdate(float a_deltaTime)
 		Gizmos::addLine( glm::vec3(10, 0, -10 + i), glm::vec3(-10, 0, -10 + i), 
 						 i == 10 ? glm::vec4(1,1,1,1) : glm::vec4(0,0,0,1) );
 	}
+
+	for (auto node : m_graph)
+	{
+		Gizmos::addAABBFilled(node->position, glm::vec3(0.05f), glm::vec4(1, 0, 0, 1));
+
+		// if there is actually connection, draw yellow line
+		if (node->edgeTarget[0] != nullptr)
+			Gizmos::addLine(node->position + glm::vec3(0, 0.05, 0), 
+							node->edgeTarget[0]->position + glm::vec3(0, 0.05, 0), 
+							glm::vec4(1, 1, 0, 1));
+
+		if (node->edgeTarget[1] != nullptr)
+			Gizmos::addLine(node->position + glm::vec3(0, 0.05, 0),
+			node->edgeTarget[1]->position + glm::vec3(0, 0.05, 0),
+			glm::vec4(1, 1, 0, 1));
+
+		if (node->edgeTarget[2] != nullptr)
+			Gizmos::addLine(node->position + glm::vec3(0, 0.05, 0),
+			node->edgeTarget[2]->position + glm::vec3(0, 0.05, 0),
+			glm::vec4(1, 1, 0, 1));
+	}
+
 
 	// quit our application when escape is pressed
 	if (glfwGetKey(m_window,GLFW_KEY_ESCAPE) == GLFW_PRESS)
@@ -114,7 +138,12 @@ void Topic_04_NavMesh::onDraw()
 void Topic_04_NavMesh::onDestroy()
 {
 	cleanupOpenGLBuffers(m_sponza);
-	// cleanupOpenGLBuffers(m_ ************************************************************
+	//cleanupOpenGLBuffers(m_navMesh);
+
+	delete m_navMesh;
+	delete m_sponza;
+
+	glDeleteProgram(m_shaderProgram);
 
 	// clean up anything we created
 	Gizmos::destroy();
@@ -125,12 +154,142 @@ int main(int argc, char* argv[])
 {
 	// explicitly control the creation of our application
 	Application* app = new Topic_04_NavMesh();
-	
-	if (app->create("AIE - Topic_04_NavMesh",DEFAULT_SCREENWIDTH,DEFAULT_SCREENHEIGHT,argc,argv) == true)
+
+	if (app->create("AIE - Topic_04_NavMesh", DEFAULT_SCREENWIDTH, DEFAULT_SCREENHEIGHT, argc, argv) == true)
 		app->run();
-		
+
 	// explicitly control the destruction of our application
 	delete app;
 
 	return 0;
+}
+
+void Topic_04_NavMesh::createOpenGLBuffers(FBXFile* a_fbx)
+{
+	// create the GL VAO/VBO/IBO data for meshes
+	for (unsigned int i = 0; i < a_fbx->getMeshCount(); ++i)
+	{
+		FBXMeshNode* mesh = a_fbx->getMeshByIndex(i);
+
+		// storage for the opengl data in 3 unsigned int
+		GLData* glData = new GLData();
+
+		glGenVertexArrays(1, &glData->vao);
+		glBindVertexArray(glData->vao);
+
+		glGenBuffers(1, &glData->vbo);
+		glGenBuffers(1, &glData->ibo);
+
+		glBindBuffer(GL_ARRAY_BUFFER, glData->vbo);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, glData->ibo);
+
+		glBufferData(GL_ARRAY_BUFFER, mesh->m_vertices.size() * sizeof(FBXVertex), mesh->m_vertices.data(), GL_STATIC_DRAW);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh->m_indices.size() * sizeof(unsigned int), mesh->m_indices.data(), GL_STATIC_DRAW);
+
+		glEnableVertexAttribArray(0); // position
+		glEnableVertexAttribArray(1); // normal
+		glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(FBXVertex), (char*)FBXVertex::PositionOffset);
+		glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(FBXVertex), (char*)FBXVertex::NormalOffset);
+
+		glBindVertexArray(0);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+		mesh->m_userData = glData;
+	}
+}
+
+void Topic_04_NavMesh::cleanupOpenGLBuffers(FBXFile* a_fbx)
+{
+	// bind our vertex array object and draw the mesh
+	for (unsigned int i = 0; i < a_fbx->getMeshCount(); ++i)
+	{
+		FBXMeshNode* mesh = a_fbx->getMeshByIndex(i);
+
+		GLData* glData = (GLData*)mesh->m_userData;
+
+		glDeleteVertexArrays(1, &glData->vao);
+		glDeleteBuffers(1, &glData->vbo);
+		glDeleteBuffers(1, &glData->ibo);
+
+		delete[] glData;
+	}
+}
+
+void Topic_04_NavMesh::buildNavMesh(FBXMeshNode* a_mesh, std::vector<NavNodeTri*>& a_graph)
+{
+	unsigned int triCount = a_mesh->m_indices.size() / 3;
+
+	for (unsigned int tri = 0; tri < triCount; ++tri)
+	{
+		NavNodeTri* node = new NavNodeTri();
+
+		// edge [ABC]
+		// [AB] = 0, [BC] = 1, [CA] = 2
+
+		node->edgeTarget[0] = nullptr;
+		node->edgeTarget[1] = nullptr;
+		node->edgeTarget[2] = nullptr;
+
+		node->vertices[0] = a_mesh->m_vertices[a_mesh->m_indices[tri * 3 + 0]].position.xyz;
+		node->vertices[1] = a_mesh->m_vertices[a_mesh->m_indices[tri * 3 + 1]].position.xyz;
+		node->vertices[2] = a_mesh->m_vertices[a_mesh->m_indices[tri * 3 + 2]].position.xyz;
+
+		node->position = (node->vertices[0] + node->vertices[1] + node->vertices[2]) / 3.0f;
+
+		a_graph.push_back(node);
+	}
+
+	for (auto start : a_graph)
+	{
+		for (auto end : a_graph)
+		{
+			if (start == end)
+				continue;
+
+			// compare triangle ABC to XYZ
+
+			// AB == XY || AB == YZ || AB == ZX
+			// AB == YX || AB == ZY || AB == XZ
+
+			if ((start->vertices[0] == end->vertices[0] && start->vertices[1] == end->vertices[1]) ||
+				(start->vertices[0] == end->vertices[1] && start->vertices[1] == end->vertices[2]) ||
+				(start->vertices[0] == end->vertices[2] && start->vertices[1] == end->vertices[0]) ||
+				(start->vertices[0] == end->vertices[1] && start->vertices[1] == end->vertices[0]) ||
+				(start->vertices[0] == end->vertices[2] && start->vertices[1] == end->vertices[1]) ||
+				(start->vertices[0] == end->vertices[0] && start->vertices[1] == end->vertices[2]))
+			{
+				start->edgeTarget[0] = end;
+			}
+
+			// BC == XY || BC == YZ || BC == ZX
+			// BC == YX || BC == ZY || BC == XZ
+
+			if ((start->vertices[1] == end->vertices[0] && start->vertices[2] == end->vertices[1]) ||
+				(start->vertices[1] == end->vertices[1] && start->vertices[2] == end->vertices[2]) ||
+				(start->vertices[1] == end->vertices[2] && start->vertices[2] == end->vertices[0]) ||
+				(start->vertices[1] == end->vertices[1] && start->vertices[2] == end->vertices[0]) ||
+				(start->vertices[1] == end->vertices[2] && start->vertices[2] == end->vertices[1]) ||
+				(start->vertices[1] == end->vertices[0] && start->vertices[2] == end->vertices[2]))
+			{
+				start->edgeTarget[1] = end;
+			}
+
+			// CA == XY || CA == YZ || CA == ZX
+			// CA == YX || CA == ZY || CA == XZ
+
+			if ((start->vertices[2] == end->vertices[0] && start->vertices[0] == end->vertices[1]) ||
+				(start->vertices[2] == end->vertices[1] && start->vertices[0] == end->vertices[2]) ||
+				(start->vertices[2] == end->vertices[2] && start->vertices[0] == end->vertices[0]) ||
+				(start->vertices[2] == end->vertices[1] && start->vertices[0] == end->vertices[0]) ||
+				(start->vertices[2] == end->vertices[2] && start->vertices[0] == end->vertices[1]) ||
+				(start->vertices[2] == end->vertices[0] && start->vertices[0] == end->vertices[2]))
+			{
+				start->edgeTarget[2] = end;
+			}
+		}
+
+	}
+	
+
 }

@@ -20,6 +20,9 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Topic_03_UserInterfaces", "Topic_03_UserInterfaces\Topic_03_UserInterfaces.vcxproj", "{CD5302AF-E4F9-406B-B8B7-6CFA03A82989}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Topic_04_NavMesh", "Topic_04_NavMesh\Topic_04_NavMesh.vcxproj", "{21999237-13CE-44B7-8380-2FFA9F6D0727}"
+	ProjectSection(ProjectDependencies) = postProject
+		{BBD02D30-A9A5-41ED-9C12-67EC17B5C08B} = {BBD02D30-A9A5-41ED-9C12-67EC17B5C08B}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
