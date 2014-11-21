@@ -235,6 +235,7 @@ void Topic_04_NavMesh::buildNavMesh(FBXMeshNode* a_mesh, std::vector<NavNodeTri*
 		node->vertices[1] = a_mesh->m_vertices[a_mesh->m_indices[tri * 3 + 1]].position.xyz;
 		node->vertices[2] = a_mesh->m_vertices[a_mesh->m_indices[tri * 3 + 2]].position.xyz;
 
+		// get center of triangle (position) by averaging vertices
 		node->position = (node->vertices[0] + node->vertices[1] + node->vertices[2]) / 3.0f;
 
 		a_graph.push_back(node);

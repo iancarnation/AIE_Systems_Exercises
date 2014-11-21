@@ -75,9 +75,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="AIEntity.cpp" />
+    <ClCompile Include="Pathfinder.cpp" />
     <ClCompile Include="Topic_04_NavMesh.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AIEntity.h" />
+    <ClInclude Include="Pathfinder.h" />
     <ClInclude Include="Topic_04_NavMesh.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
