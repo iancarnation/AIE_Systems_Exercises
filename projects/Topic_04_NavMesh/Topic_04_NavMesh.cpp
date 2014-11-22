@@ -79,19 +79,19 @@ void Topic_04_NavMesh::onUpdate(float a_deltaTime)
 		Gizmos::addAABBFilled(node->position, glm::vec3(0.05f), glm::vec4(1, 0, 0, 1));
 
 		// if there is actually connection, draw yellow line
-		if (node->edgeTarget[0] != nullptr)
+		if (node->adjacentNodes[0] != nullptr)
 			Gizmos::addLine(node->position + glm::vec3(0, 0.05, 0), 
-							node->edgeTarget[0]->position + glm::vec3(0, 0.05, 0), 
+							node->adjacentNodes[0]->position + glm::vec3(0, 0.05, 0), 
 							glm::vec4(1, 1, 0, 1));
 
-		if (node->edgeTarget[1] != nullptr)
+		if (node->adjacentNodes[1] != nullptr)
 			Gizmos::addLine(node->position + glm::vec3(0, 0.05, 0),
-			node->edgeTarget[1]->position + glm::vec3(0, 0.05, 0),
+			node->adjacentNodes[1]->position + glm::vec3(0, 0.05, 0),
 			glm::vec4(1, 1, 0, 1));
 
-		if (node->edgeTarget[2] != nullptr)
+		if (node->adjacentNodes[2] != nullptr)
 			Gizmos::addLine(node->position + glm::vec3(0, 0.05, 0),
-			node->edgeTarget[2]->position + glm::vec3(0, 0.05, 0),
+			node->adjacentNodes[2]->position + glm::vec3(0, 0.05, 0),
 			glm::vec4(1, 1, 0, 1));
 	}
 
@@ -224,12 +224,17 @@ void Topic_04_NavMesh::buildNavMesh(FBXMeshNode* a_mesh, std::vector<NavNodeTri*
 	{
 		NavNodeTri* node = new NavNodeTri();
 
+		node->f = 0;
+		node->g = 0;
+		node->h = 0;
+		node->parent = nullptr;
+
 		// edge [ABC]
 		// [AB] = 0, [BC] = 1, [CA] = 2
 
-		node->edgeTarget[0] = nullptr;
-		node->edgeTarget[1] = nullptr;
-		node->edgeTarget[2] = nullptr;
+		node->adjacentNodes[0] = nullptr;
+		node->adjacentNodes[1] = nullptr;
+		node->adjacentNodes[2] = nullptr;
 
 		node->vertices[0] = a_mesh->m_vertices[a_mesh->m_indices[tri * 3 + 0]].position.xyz;
 		node->vertices[1] = a_mesh->m_vertices[a_mesh->m_indices[tri * 3 + 1]].position.xyz;
@@ -260,7 +265,7 @@ void Topic_04_NavMesh::buildNavMesh(FBXMeshNode* a_mesh, std::vector<NavNodeTri*
 				(start->vertices[0] == end->vertices[2] && start->vertices[1] == end->vertices[1]) ||
 				(start->vertices[0] == end->vertices[0] && start->vertices[1] == end->vertices[2]))
 			{
-				start->edgeTarget[0] = end;
+				start->adjacentNodes[0] = end;
 			}
 
 			// BC == XY || BC == YZ || BC == ZX
@@ -273,7 +278,7 @@ void Topic_04_NavMesh::buildNavMesh(FBXMeshNode* a_mesh, std::vector<NavNodeTri*
 				(start->vertices[1] == end->vertices[2] && start->vertices[2] == end->vertices[1]) ||
 				(start->vertices[1] == end->vertices[0] && start->vertices[2] == end->vertices[2]))
 			{
-				start->edgeTarget[1] = end;
+				start->adjacentNodes[1] = end;
 			}
 
 			// CA == XY || CA == YZ || CA == ZX
@@ -286,7 +291,7 @@ void Topic_04_NavMesh::buildNavMesh(FBXMeshNode* a_mesh, std::vector<NavNodeTri*
 				(start->vertices[2] == end->vertices[2] && start->vertices[0] == end->vertices[1]) ||
 				(start->vertices[2] == end->vertices[0] && start->vertices[0] == end->vertices[2]))
 			{
-				start->edgeTarget[2] = end;
+				start->adjacentNodes[2] = end;
 			}
 		}
 

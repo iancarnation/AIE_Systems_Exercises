@@ -13,21 +13,24 @@ public:
 	Topic_04_NavMesh();
 	virtual ~Topic_04_NavMesh();
 
+	struct NavNodeTri
+	{
+		glm::vec3 position;
+		glm::vec3 vertices[3];
+		NavNodeTri* adjacentNodes[3];
+
+		float f, g, h;
+		NavNodeTri* parent;
+	};
+
+	std::vector<NavNodeTri*> m_graph;
+
 protected:
 
 	virtual bool onCreate(int a_argc, char* a_argv[]);
 	virtual void onUpdate(float a_deltaTime);
 	virtual void onDraw();
 	virtual void onDestroy();
-
-	struct NavNodeTri
-	{
-		glm::vec3 position;
-		glm::vec3 vertices[3];
-		NavNodeTri* edgeTarget[3];
-	};
-
-	std::vector<NavNodeTri*> m_graph;
 
 	void buildNavMesh(FBXMeshNode* a_mesh,
 					  std::vector<NavNodeTri*>& a_graph);
