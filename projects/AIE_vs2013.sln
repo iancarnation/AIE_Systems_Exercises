@@ -24,6 +24,13 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Topic_04_NavMesh", "Topic_0
 		{BBD02D30-A9A5-41ED-9C12-67EC17B5C08B} = {BBD02D30-A9A5-41ED-9C12-67EC17B5C08B}
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Topic_05_BehaviorTrees", "Topic_05_BehaviorTrees\Topic_05_BehaviorTrees.vcxproj", "{39A9ECA4-6C71-4159-9116-7261CECE2AA6}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Topic_06_GoalOrientedBehavior_Planning", "Topic_06_GoalOrientedBehavior_Planning\Topic_06_GoalOrientedBehavior_Planning.vcxproj", "{1B8BD2B1-7A13-41F5-B7DA-F9EC9E0BCFDC}"
+	ProjectSection(ProjectDependencies) = postProject
+		{BBD02D30-A9A5-41ED-9C12-67EC17B5C08B} = {BBD02D30-A9A5-41ED-9C12-67EC17B5C08B}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -54,6 +61,14 @@ Global
 		{21999237-13CE-44B7-8380-2FFA9F6D0727}.Debug|Win32.Build.0 = Debug|Win32
 		{21999237-13CE-44B7-8380-2FFA9F6D0727}.Release|Win32.ActiveCfg = Release|Win32
 		{21999237-13CE-44B7-8380-2FFA9F6D0727}.Release|Win32.Build.0 = Release|Win32
+		{39A9ECA4-6C71-4159-9116-7261CECE2AA6}.Debug|Win32.ActiveCfg = Debug|Win32
+		{39A9ECA4-6C71-4159-9116-7261CECE2AA6}.Debug|Win32.Build.0 = Debug|Win32
+		{39A9ECA4-6C71-4159-9116-7261CECE2AA6}.Release|Win32.ActiveCfg = Release|Win32
+		{39A9ECA4-6C71-4159-9116-7261CECE2AA6}.Release|Win32.Build.0 = Release|Win32
+		{1B8BD2B1-7A13-41F5-B7DA-F9EC9E0BCFDC}.Debug|Win32.ActiveCfg = Debug|Win32
+		{1B8BD2B1-7A13-41F5-B7DA-F9EC9E0BCFDC}.Debug|Win32.Build.0 = Debug|Win32
+		{1B8BD2B1-7A13-41F5-B7DA-F9EC9E0BCFDC}.Release|Win32.ActiveCfg = Release|Win32
+		{1B8BD2B1-7A13-41F5-B7DA-F9EC9E0BCFDC}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

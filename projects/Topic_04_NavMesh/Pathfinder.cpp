@@ -110,7 +110,7 @@ void Pathfinder::Run(vec3 a_start, vec3 a_end)
 					{
 						// - - - - - see if adjacent node's G score is any lower if you go through the current square to get there
 						// determine G cost of possible new path
-						GetGCost(currentNode, )
+						GetGCost(currentNode, adjNode);
 
 						if (adjNode.g > currentNode.g + adjNode.cost)
 							// - - - - - if current path is better, update node 
