@@ -76,12 +76,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="AI_Assessment.cpp" />
-    <ClCompile Include="BehaviorTree.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Agent.h" />
     <ClInclude Include="AI_Assessment.h" />
-    <ClInclude Include="Shared.h" />
-    <ClInclude Include="Test.h" />
+    <ClInclude Include="Behavior.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

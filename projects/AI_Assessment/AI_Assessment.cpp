@@ -5,8 +5,98 @@
 #include <GLFW/glfw3.h>
 #include <glm/ext.hpp>
 
+#include "Agent.h"
+
 #define DEFAULT_SCREENWIDTH 1280
 #define DEFAULT_SCREENHEIGHT 720
+
+/*
+-- Action Behaviors --
+- Go To Food (SeekTarget)
+- Get Path (random point for now (RandomizeTarget))
+- Go To Next Waypoint (SeekTarget)
+
+-- Condition Behaviors --
+- Food Detected?
+- Need New Path?
+
+-- Composite Behaviors
+- Root (sel)
+- Eat Food (seq)
+- Roam (sel)
+- Have Path (seq)
+*/
+
+class RandomizeTarget : public Behavior
+{
+public:
+
+	RandomizeTarget(float a_radius) : radius(a_radius) {}
+	virtual ~RandomizeTarget() {}
+
+	virtual Status execute(Agent* a_agent)
+	{
+		glm::vec3 target(0);
+
+		target.xz = glm::circularRand(radius);
+
+		a_agent->setTarget(target);
+		return SUCCESS;
+	}
+
+	float radius;
+};
+
+class SeekTarget : public Behavior
+{
+public: 
+
+	SeekTarget(float a_speed) : speed(a_speed) {}
+	virtual ~SeekTarget() {}
+
+	virtual Status execute(Agent* agent)
+	{
+		glm::vec3 pos = agent->getPosition();
+		glm::vec3 dir = glm::normalize(agent->getTarget() - pos);
+
+		agent->setPosition(pos + dir * speed * Utility::getDeltaTime());
+		return SUCCESS;
+	}
+
+	float speed;
+};
+
+// == Ian Code =========
+
+std::vector<glm::vec3*> foodPositions;
+
+class FoodDetected : public Behavior
+{
+public:
+
+	FoodDetected(float a_range) : range2(a_range*a_range) {}
+	virtual ~FoodDetected() {}
+
+	virtual Status execute(Agent* agent)
+	{
+		for (auto foodPos = foodPositions.begin(); foodPos != foodPositions.end(); foodPos++)
+		{
+			glm::vec3 **fPvalue = &*foodPos; // dereferenced value of food position vector
+			float dist2 = glm::distance2(agent->getPosition(), fPvalue);
+
+			if (dist2 <= range2)
+				return SUCCESS;
+		}
+
+		return FAILURE;
+	}
+
+	float range2;
+};
+
+// =====================
+
+
 
 AI_Assessment::AI_Assessment()
 {
@@ -33,6 +123,14 @@ bool AI_Assessment::onCreate(int a_argc, char* a_argv[])
 	glClearColor(0.25f,0.25f,0.25f,1);
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
+
+	// --------------------------
+
+	monster = new Agent();
+
+
+
+	// --------------------------
 
 	return true;
 }

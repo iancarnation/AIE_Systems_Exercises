@@ -18,18 +18,15 @@
     <ClCompile Include="AI_Assessment.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="BehaviorTree.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AI_Assessment.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="Test.h">
+    <ClInclude Include="Behavior.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Shared.h">
+    <ClInclude Include="Agent.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
