@@ -4,6 +4,7 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <glm/ext.hpp>
+#include <iostream>
 
 #include "Agent.h"
 
@@ -11,14 +12,18 @@
 #define DEFAULT_SCREENHEIGHT 720
 
 /*
+== Monster Behaviors ===
+
 -- Action Behaviors --
-- Go To Food (SeekTarget)
-- Get Path (random point for now (RandomizeTarget))
-- Go To Next Waypoint (SeekTarget)
+- Eat Food (Timer)
+- Seek Food (SeekTarget)
+- Seek Wander Target (SeekTarget)
+- Get Wander Target(random point for now (RandomizeTarget))
 
 -- Condition Behaviors --
+- At Food?
 - Food Detected?
-- Need New Path?
+- Have Wander Target?
 
 -- Composite Behaviors
 - Root (sel)
@@ -31,7 +36,7 @@ class RandomizeTarget : public Behavior
 {
 public:
 
-	RandomizeTarget(float a_radius) : radius(a_radius) {}
+	RandomizeTarget(char* a_name, float a_radius) : name(a_name), radius(a_radius) {}
 	virtual ~RandomizeTarget() {}
 
 	virtual Status execute(Agent* a_agent)
@@ -41,10 +46,12 @@ public:
 		target.xz = glm::circularRand(radius);
 
 		a_agent->setTarget(target);
+		std::printf("Random Target Set at (%f, %f)\n", target.x, target.z);
 		return SUCCESS;
 	}
 
 	float radius;
+	char* name;
 };
 
 class SeekTarget : public Behavior
@@ -60,6 +67,7 @@ public:
 		glm::vec3 dir = glm::normalize(agent->getTarget() - pos);
 
 		agent->setPosition(pos + dir * speed * Utility::getDeltaTime());
+		std::cout << "Seeking Target\n";
 		return SUCCESS;
 	}
 
@@ -68,25 +76,114 @@ public:
 
 // == Ian Code =========
 
-std::vector<glm::vec3*> foodPositions;
+Food allFood[20];
 
-class FoodDetected : public Behavior
+class Timer : public Behavior
 {
 public:
 
-	FoodDetected(float a_range) : range2(a_range*a_range) {}
-	virtual ~FoodDetected() {}
+	Timer(char* a_name, float a_duration) : name(a_name), duration(a_duration) {}
+	virtual ~Timer() {}
 
 	virtual Status execute(Agent* agent)
 	{
-		for (auto foodPos = foodPositions.begin(); foodPos != foodPositions.end(); foodPos++)
-		{
-			glm::vec3 **fPvalue = &*foodPos; // dereferenced value of food position vector
-			float dist2 = glm::distance2(agent->getPosition(), fPvalue);
+		duration -= Utility::getDeltaTime();
+		if (duration <= 0)
+			std::cout << "Timer Finished\n";
+			return SUCCESS;
+	}
 
-			if (dist2 <= range2)
+	float duration;
+	char* name;
+};
+
+class AtFood : public Behavior
+{
+public:
+
+	AtFood(float a_range) : range2(a_range*a_range) {}
+	virtual ~AtFood() {}
+
+	virtual Status execute(Agent* agent)
+	{
+		// if position is in food list
+		for (Food &f : allFood)
+		{
+			float dist2 = glm::distance2(agent->getPosition(), f.position);
+
+			if (f.alive && dist2<= range2)
+			{
+				std::cout << "Is At Food\n";
+				f.alive = false;
 				return SUCCESS;
+			}
 		}
+		std::cout << "Is NOT At Food\n";
+		return FAILURE;
+	}
+
+	float range2;
+};
+
+class ClosestFoodDetected : public Behavior
+{
+public:
+
+	ClosestFoodDetected(float a_range) : range2(a_range*a_range) {}
+	virtual ~ClosestFoodDetected() {}
+
+	virtual Status execute(Agent* agent)
+	{
+		glm::vec3 bestTarget;
+
+		for (Food &f : allFood)
+		{
+			if (f.alive)
+			{
+				float dist2 = glm::distance2(agent->getPosition(), f.position);
+
+				if (dist2 <= range2) // food is within perception range
+				{
+					bestTarget = f.position;
+					float closestD2 = dist2;
+
+					// check for closest
+					for (Food &g : allFood)
+					{
+						if (g.alive)
+						{
+							float d2 = glm::distance2(agent->getPosition(), g.position);
+							if (d2 < closestD2)
+								bestTarget = g.position;
+						}
+					}
+
+					agent->setTarget(bestTarget);
+					std::cout << "Closest Food Detected\n";
+					return SUCCESS;
+				}
+			}
+		}
+		std::cout << "Food Not Detected\n";
+		return FAILURE;
+	}
+
+	float range2;
+};
+
+class AtWanderTarget : public Behavior
+{
+public:
+
+	AtWanderTarget(float a_range) : range2(a_range*a_range) {}
+	virtual ~AtWanderTarget() {}
+
+	virtual Status execute(Agent* agent)
+	{
+		float dist2 = glm::distance2(agent->getPosition(), agent->getTarget());
+
+		if (dist2 <= range2)
+			return SUCCESS;
 
 		return FAILURE;
 	}
@@ -94,8 +191,26 @@ public:
 	float range2;
 };
 
-// =====================
+class HaveWanderTarget : public Behavior
+{
+public:
 
+	HaveWanderTarget() {}
+	virtual ~HaveWanderTarget() {}
+
+	virtual Status execute(Agent* agent)
+	{
+		if (agent->getTarget() != glm::vec3(NULL))
+		{
+			std::cout << "Has Wander Target\n";
+			return SUCCESS;
+		}
+		std::cout << "Has NO Wander Target\n";
+		return FAILURE;
+	}
+};
+
+// =====================
 
 
 AI_Assessment::AI_Assessment()
@@ -124,13 +239,78 @@ bool AI_Assessment::onCreate(int a_argc, char* a_argv[])
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
 
-	// --------------------------
+	// Ian Code ====================
 
 	monster = new Agent();
 
+//--------------
+	Behavior* isAtFood = new AtFood(0.5f);
+	Behavior* eatFood = new Timer("eatFood", 5000);
 
+	Sequence* eatingCheck = new Sequence();
+	eatingCheck->addChild(isAtFood);
+	eatingCheck->addChild(eatFood);
+//--------------
+	Behavior* isFoodClose = new ClosestFoodDetected(5);
+	Behavior* seekFood = new SeekTarget(5);
 
-	// --------------------------
+	Sequence* towardsFood = new Sequence();
+	towardsFood->addChild(isFoodClose);
+	towardsFood->addChild(seekFood);
+//-------------
+	Behavior* isAtWanderTarget = new AtWanderTarget(0.5f);
+	Behavior* getWander = new RandomizeTarget("getWander", 10);
+
+	Sequence* waypointCheck = new Sequence();
+	waypointCheck->addChild(isAtWanderTarget);
+	waypointCheck->addChild(getWander);
+//-------------
+	Behavior* haveWander = new HaveWanderTarget();
+	Behavior* seekWander = new SeekTarget(3);
+
+	Sequence* towardsWander = new Sequence();
+	towardsWander->addChild(haveWander);
+	towardsWander->addChild(seekWander);
+//------------
+	Selector* target = new Selector();
+	target->addChild(towardsWander);
+	target->addChild(getWander);
+//------------
+	Selector* wander = new Selector();
+	wander->addChild(waypointCheck);
+	wander->addChild(target);
+//-----------
+	Selector* findFood = new Selector();
+	findFood->addChild(towardsFood);
+	findFood->addChild(wander);
+//----------
+	Selector* root = new Selector();
+	root->addChild(eatingCheck);
+	root->addChild(findFood);
+//---------
+
+	monsterBehavior = root;
+	monster->setBehavior(monsterBehavior);
+
+	//monster->setPosition(glm::vec3(0));
+
+	for (Food &f : allFood)
+	{
+		f.position = glm::vec3(0);
+		f.alive = false;
+	}
+
+	// temp food 
+
+	Food food1 = { glm::vec3(5,0,7), true };
+	Food food2 = { glm::vec3(2, 0, 4), true };
+	Food food3 = { glm::vec3(9, 0, 9), true };
+
+	allFood[1] = food1;
+	allFood[2] = food2;
+	allFood[3] = food3;
+
+	// ============================
 
 	return true;
 }
@@ -154,6 +334,26 @@ void AI_Assessment::onUpdate(float a_deltaTime)
 		
 		Gizmos::addLine( glm::vec3(10, 0, -10 + i), glm::vec3(-10, 0, -10 + i), 
 						 i == 10 ? glm::vec4(1,1,1,1) : glm::vec4(0,0,0,1) );
+	}
+
+	monster->update(a_deltaTime);
+
+	/*std::printf("Monster Position (post): (%f, %f)\n", monster->getPosition().x, monster->getPosition().z);
+	std::printf("Monster Target (post): (%f, %f)\n", monster->getTarget().x, monster->getTarget().z);*/
+
+	Gizmos::addAABBFilled(monster->getPosition(),
+		glm::vec3(0.5f), glm::vec4(1, 1, 0, 1));
+
+	Gizmos::addAABBFilled(monster->getTarget(),
+		glm::vec3(0.1f), glm::vec4(1, 0, 0, 1));
+
+	// Ian Code ======================
+
+	// draw food positions
+	for (int f = 1; f != 20; f++)
+	{
+		if (allFood[f].alive)
+			Gizmos::addAABBFilled(allFood[f].position, glm::vec3(0.3f), glm::vec4(1, 0.5, 0.5, 1));
 	}
 
 	// quit our application when escape is pressed

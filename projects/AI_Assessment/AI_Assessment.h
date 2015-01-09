@@ -6,6 +6,12 @@
 class Agent;
 class Behavior;
 
+struct Food
+{
+	glm::vec3 position;
+	bool alive;
+};
+
 // derived application class that wraps up all globals neatly
 class AI_Assessment : public Application
 {
@@ -23,8 +29,6 @@ protected:
 
 	Agent* monster;
 	Behavior* monsterBehavior;
-
-	
 
 	glm::mat4	m_cameraMatrix;
 	glm::mat4	m_projectionMatrix;

@@ -259,7 +259,7 @@ namespace bt1
 
 	// -----------------------------------------------------------------------
 
-	template <class COMPOSITE> // using template because there are multiple composites?? (Comp. & Seq.)?? -- No, it is in order to handle any object of type 'Composite' 
+	template <class COMPOSITE> // using template because there are multiple composites?? (Comp. & Seq.)?? -- No, it is in order to handle any object of type 'Composite' -- No, maybe the first one?? 
 	class MockComposite : public COMPOSITE
 	{
 	public:
@@ -282,7 +282,7 @@ namespace bt1
 		MockBehavior& operator[](size_t index)
 		{
 			ASSERT(INDEX < COMPOSITE::children.size());
-			return *static_cast<Mockbehaior*>(COMPOSITE::children[index]);
+			return *static_cast<Mockbehavior*>(COMPOSITE::children[index]);
 		}
 	};
 

@@ -74,10 +74,9 @@ public:
 				}
 
 				// all tasks complete!
-				m_complete == true;
+				m_complete = true;
 			}
 		}
-
 
 		return m_complete;
 	}
