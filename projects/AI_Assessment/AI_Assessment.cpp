@@ -78,12 +78,12 @@ class WithinRange : public Behavior
 {
 public:
 
-	WithinRange(float a_range, glm::vec3 a_target) : range2(a_range*a_range), target(a_target) {}
+	WithinRange(float a_range, const glm::vec3 * a_target) : range2(a_range*a_range), target(a_target) {}
 	virtual ~WithinRange() {}
 
 	virtual Status execute(Agent* a_agent)
 	{
-		float dist2 = glm::distance2(a_agent->getPosition(), target);
+		float dist2 = glm::distance2(a_agent->getPosition(), *target);
 
 		if (dist2 <= range2)
 			return SUCCESS;
@@ -91,14 +91,14 @@ public:
 		return FAILURE;
 	}
 
-	glm::vec3 target;
+	const glm::vec3 * target;
 	float range2;
 };
 
 // == Ian Code =========
 
 Food allFood[20];
-glm::vec3 exitLoc(10, 0, 10);
+const glm::vec3 exitLoc(10, 0, 10);
 
 // Generic -----------
 
@@ -197,26 +197,29 @@ class AvoidTarget : public Behavior
 {
 public:
 
-	AvoidTarget(float a_speed, glm::vec3 a_target) : speed(a_speed), target(a_target){}
+	AvoidTarget(float a_speed, const glm::vec3 * a_target) : speed(a_speed), target(a_target){}
 	virtual ~AvoidTarget() {}
 
 	virtual Status execute(Agent* agent)
 	{
 		glm::vec3 pos = agent->getPosition();
-		glm::vec3 dir = glm::normalize(pos - target);
+		glm::vec3 dir = glm::normalize(pos - *target);
 
+		//agent->setTarget(pos + dir * 0.2f);
 		agent->setPosition(pos + dir * speed * Utility::getDeltaTime());
 		std::cout << "Avoiding Target\n";
 		return SUCCESS;
 	}
 
 	float speed;
-	glm::vec3 target;
+	const glm::vec3 * target;
 };
 
 class Inverter : public Decorator
 {
-	Inverter(Behavior* a_child) : Decorator(child) {}
+public:
+
+	Inverter(Behavior* a_child) : Decorator(a_child) {}
 	virtual ~Inverter() {}
 
 	virtual Status execute(Agent* agent)
@@ -389,10 +392,11 @@ bool AI_Assessment::onCreate(int a_argc, char* a_argv[])
 
 	// Ian Code ====================
 
-
 	monster = new Agent();
+	baiter = new Agent();
 
-
+	baiter->setPosition(glm::vec3(9, 0, -9));
+{
 // vvv Monster vvvvvvvvvvvvvvvvvvvvvvvvvvv
 	Behavior* eatingNow = new Timer(3);
 //--------------
@@ -447,8 +451,78 @@ bool AI_Assessment::onCreate(int a_argc, char* a_argv[])
 
 	monsterBehavior = root;
 	monster->setBehavior(monsterBehavior);
+}
+{
+// vvv Baiter vvvvvvvvvvvvvvvvvvvvvvvvvvv
+	Behavior* isAtExit = new WithinRange(0.2f, &exitLoc);
+	// baiter win
 
-	//monster->setPosition(glm::vec3(0));
+	Sequence* exitCheck = new Sequence();
+	exitCheck->addChild(isAtExit);
+//--------------
+	Behavior* exitDetected = new ExitDetected(4);
+	Behavior* seekExit = new SeekTarget(3);
+
+	Sequence* towardsExit = new Sequence();
+	towardsExit->addChild(exitDetected);
+	towardsExit->addChild(seekExit);
+//--------------
+	Behavior* monsterDetected = new WithinRange(6, &monster->getPosition()); // not sure if reference will work
+	Behavior* avoidMonster = new AvoidTarget(3, &monster->getPosition());
+
+		Behavior* waitToBait = new Timer(3);
+		Behavior* not = new Inverter(waitToBait);
+
+		Behavior* layBait = new LayBait();
+
+		Sequence* baitCheck = new Sequence();
+		baitCheck->addChild(not);
+		baitCheck->addChild(layBait);
+
+	Sequence* monsterCheck = new Sequence();
+	monsterCheck->addChild(monsterDetected);
+	monsterCheck->addChild(avoidMonster);
+	monsterCheck->addChild(baitCheck);
+//--------------
+	Behavior* isAtWanderTarget = new AtWanderTarget(0.5f);
+	Behavior* getWander = new RandomizeTarget("getWander", 14);
+
+	Sequence* waypointCheck = new Sequence();
+	waypointCheck->addChild(isAtWanderTarget);
+	waypointCheck->addChild(getWander);
+//-------------
+	Behavior* haveMoveTarget = new HaveMovementTarget();
+	Behavior* seekWander = new SeekTarget(3);
+
+	Sequence* towardsMoveTarget = new Sequence();
+	towardsMoveTarget->addChild(haveMoveTarget);
+	towardsMoveTarget->addChild(seekWander);
+//------------
+	Selector* target = new Selector();
+	target->addChild(towardsMoveTarget);
+	target->addChild(getWander);
+//------------
+	Selector* wander = new Selector();
+	wander->addChild(waypointCheck);
+	wander->addChild(target);
+//-----------
+	Selector* movementPriority = new Selector();
+	movementPriority->addChild(monsterCheck);
+	movementPriority->addChild(wander);
+//-----------
+	Selector* exit = new Selector();
+	exit->addChild(exitCheck);
+	exit->addChild(towardsExit);
+//-----------
+	Selector* root = new Selector();
+	root->addChild(exit);
+	root->addChild(movementPriority);
+//-----------
+
+	baiterBehavior = root;
+	baiter->setBehavior(baiterBehavior);
+}
+
 
 	for (Food &f : allFood)
 	{
@@ -456,21 +530,25 @@ bool AI_Assessment::onCreate(int a_argc, char* a_argv[])
 		f.alive = false;
 	}
 
-	// temp food 
+	// set baiter's position in food list
+	allFood[0].position = baiter->getPosition();
+	allFood[0].alive = true;
 
-	Food food1 = { glm::vec3(5,0,7), true };
-	//Food food2 = { glm::vec3(2, 0, 4), true };
-	Food food3 = { glm::vec3(-9, 0, -9), true };
-	Food food4 = { glm::vec3(-2, 0, 7), true };
-	//Food food5 = { glm::vec3(5, 0, 3), true };
-	//Food food6 = { glm::vec3(-3, 0, -4), true };
+	//// temp food 
 
-	allFood[1] = food1;
-	//allFood[2] = food2;
-	allFood[3] = food3;
-	allFood[4] = food4;
-	//allFood[5] = food5;
-	//allFood[6] = food6;
+	//Food food1 = { glm::vec3(5,0,7), true };
+	////Food food2 = { glm::vec3(2, 0, 4), true };
+	//Food food3 = { glm::vec3(-9, 0, -9), true };
+	//Food food4 = { glm::vec3(-2, 0, 7), true };
+	////Food food5 = { glm::vec3(5, 0, 3), true };
+	////Food food6 = { glm::vec3(-3, 0, -4), true };
+
+	//allFood[1] = food1;
+	////allFood[2] = food2;
+	//allFood[3] = food3;
+	//allFood[4] = food4;
+	////allFood[5] = food5;
+	////allFood[6] = food6;
 
 	// ============================
 
@@ -499,6 +577,8 @@ void AI_Assessment::onUpdate(float a_deltaTime)
 	}
 
 	monster->update(a_deltaTime);
+	baiter->update(a_deltaTime);
+	allFood[0].position = baiter->getPosition();
 
 	/*std::printf("Monster Position (post): (%f, %f)\n", monster->getPosition().x, monster->getPosition().z);
 	std::printf("Monster Target (post): (%f, %f)\n", monster->getTarget().x, monster->getTarget().z);*/
@@ -509,14 +589,23 @@ void AI_Assessment::onUpdate(float a_deltaTime)
 	Gizmos::addAABBFilled(monster->getTarget(),
 		glm::vec3(0.1f), glm::vec4(1, 0, 0, 1));
 
+	Gizmos::addAABBFilled(baiter->getPosition(),
+		glm::vec3(0.3f), glm::vec4(0, 0, 1, 1));
+
+	Gizmos::addAABBFilled(baiter->getTarget(),
+		glm::vec3(0.1f), glm::vec4(0, 0, 0.5f, 1));
+
 	// Ian Code ======================
 
 	// draw food positions
 	for (int f = 1; f != 20; f++)
 	{
 		if (allFood[f].alive)
-			Gizmos::addAABBFilled(allFood[f].position, glm::vec3(0.3f), glm::vec4(1, 0.5, 0.5, 1));
+			Gizmos::addAABBFilled(allFood[f].position, glm::vec3(0.25f), glm::vec4(1, 0.5, 0.5, 1));
 	}
+
+	// draw exit
+	Gizmos::addAABBFilled(exitLoc, glm::vec3(0.5f), glm::vec4(1, 0.75, 0, 1));
 
 	// quit our application when escape is pressed
 	if (glfwGetKey(m_window,GLFW_KEY_ESCAPE) == GLFW_PRESS)
