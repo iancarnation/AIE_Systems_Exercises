@@ -79,3 +79,15 @@ public:
 		return SUCCESS;
 	}
 };
+
+// Ian Code ========
+
+class Decorator : public Behavior
+{
+protected:
+	Behavior* child;
+	
+public:
+	Decorator(Behavior* a_child) : child(a_child) {}
+	virtual ~Decorator() {}
+};

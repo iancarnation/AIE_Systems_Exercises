@@ -3,11 +3,15 @@
 #include "Behavior.h"
 #include <glm/glm.hpp>
 
+#include <stdio.h>
+#include <time.h>
+#include <math.h>
+
 class Agent
 {
 public:
 
-	Agent() : m_behavior(nullptr), m_position(0), m_target(0) {}
+	Agent() : m_behavior(nullptr), m_position(0), m_target(0) , treePaused(false){}
 	virtual ~Agent() {}
 
 	const glm::vec3&	getPosition() const { return m_position; }
@@ -18,10 +22,21 @@ public:
 
 	void				setBehavior(Behavior* a_behavior) { m_behavior = a_behavior; }
 
+	bool				isTreePaused() { return treePaused; }
+	void				setTreePaused(bool b) { treePaused = b; }
+
 	virtual void		update(float a_deltaTime)
 	{
 		if (m_behavior != nullptr)
+		{
+			clock_t t;
+			t = clock();
+
 			m_behavior->execute(this);
+
+			t = clock() - t;
+			printf("It took %d clicks (%f seconds)...........................................................\n", t, ((float)t) / CLOCKS_PER_SEC);
+		}
 	}
 
 private:
@@ -30,6 +45,10 @@ private:
 
 	glm::vec3 m_position;
 	glm::vec3 m_target;
+
+	bool treePaused;
+
+	//float treeTimer;
 };
 
 class Task

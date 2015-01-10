@@ -12,6 +12,7 @@ struct Food
 	bool alive;
 };
 
+
 // derived application class that wraps up all globals neatly
 class AI_Assessment : public Application
 {
@@ -27,8 +28,8 @@ protected:
 	virtual void onDraw();
 	virtual void onDestroy();
 
-	Agent* monster;
-	Behavior* monsterBehavior;
+	Agent * monster, * baiter;
+	Behavior * monsterBehavior, * baiterBehavior;
 
 	glm::mat4	m_cameraMatrix;
 	glm::mat4	m_projectionMatrix;

@@ -74,28 +74,163 @@ public:
 	float speed;
 };
 
+class WithinRange : public Behavior
+{
+public:
+
+	WithinRange(float a_range, glm::vec3 a_target) : range2(a_range*a_range), target(a_target) {}
+	virtual ~WithinRange() {}
+
+	virtual Status execute(Agent* a_agent)
+	{
+		float dist2 = glm::distance2(a_agent->getPosition(), target);
+
+		if (dist2 <= range2)
+			return SUCCESS;
+
+		return FAILURE;
+	}
+
+	glm::vec3 target;
+	float range2;
+};
+
 // == Ian Code =========
 
 Food allFood[20];
+glm::vec3 exitLoc(10, 0, 10);
+
+// Generic -----------
 
 class Timer : public Behavior
 {
 public:
 
-	Timer(char* a_name, float a_duration) : name(a_name), duration(a_duration) {}
+	Timer(float a_duration) : duration(a_duration), timeLeft(0), timerRunning(false) {}
 	virtual ~Timer() {}
 
 	virtual Status execute(Agent* agent)
 	{
-		duration -= Utility::getDeltaTime();
-		if (duration <= 0)
-			std::cout << "Timer Finished\n";
+		if (agent->isTreePaused() && !timerRunning)
+		{
+			timeLeft = duration;
+			timerRunning = true;
+		}
+		
+		if (timerRunning && timeLeft > 0)
+		{
+			timeLeft -= Utility::getDeltaTime();
+			printf("Time Remaining: %f\n", timeLeft);
 			return SUCCESS;
+		}
+
+		agent->setTreePaused(false);
+		timerRunning = false;
+
+		return FAILURE;
 	}
 
 	float duration;
-	char* name;
+
+private:
+	
+	bool timerRunning;
+	float timeLeft;
 };
+
+class TriggerTreePause : public Behavior
+{
+public:
+
+	TriggerTreePause() {}
+	virtual ~TriggerTreePause() {}
+
+	virtual Status execute(Agent* agent)
+	{
+		agent->setTreePaused(true);
+		std::cout << "Pause Triggered\n";
+		return SUCCESS;
+	}
+
+};
+
+class AtWanderTarget : public Behavior
+{
+public:
+
+	AtWanderTarget(float a_range) : range2(a_range*a_range) {}
+	virtual ~AtWanderTarget() {}
+
+	virtual Status execute(Agent* agent)
+	{
+		float dist2 = glm::distance2(agent->getPosition(), agent->getTarget());
+
+		if (dist2 <= range2)
+			return SUCCESS;
+
+		return FAILURE;
+	}
+
+	float range2;
+};
+
+class HaveMovementTarget : public Behavior
+{
+public:
+
+	HaveMovementTarget() {}
+	virtual ~HaveMovementTarget() {}
+
+	virtual Status execute(Agent* agent)
+	{
+		if (agent->getTarget() != glm::vec3(NULL))
+		{
+			std::cout << "Has Movement Target\n";
+			return SUCCESS;
+		}
+		std::cout << "Has NO Movement Target\n";
+		return FAILURE;
+	}
+};
+
+class AvoidTarget : public Behavior
+{
+public:
+
+	AvoidTarget(float a_speed, glm::vec3 a_target) : speed(a_speed), target(a_target){}
+	virtual ~AvoidTarget() {}
+
+	virtual Status execute(Agent* agent)
+	{
+		glm::vec3 pos = agent->getPosition();
+		glm::vec3 dir = glm::normalize(pos - target);
+
+		agent->setPosition(pos + dir * speed * Utility::getDeltaTime());
+		std::cout << "Avoiding Target\n";
+		return SUCCESS;
+	}
+
+	float speed;
+	glm::vec3 target;
+};
+
+class Inverter : public Decorator
+{
+	Inverter(Behavior* a_child) : Decorator(child) {}
+	virtual ~Inverter() {}
+
+	virtual Status execute(Agent* agent)
+	{
+		Status childStatus = child->execute(agent);
+
+		if (childStatus == SUCCESS)
+			return FAILURE;
+		else if (childStatus == FAILURE)
+			return SUCCESS;
+	}
+};
+
+// Monster ---------
 
 class AtFood : public Behavior
 {
@@ -113,7 +248,7 @@ public:
 
 			if (f.alive && dist2<= range2)
 			{
-				std::cout << "Is At Food\n";
+				std::cout << "Is At Food!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
 				f.alive = false;
 				return SUCCESS;
 			}
@@ -171,19 +306,26 @@ public:
 	float range2;
 };
 
-class AtWanderTarget : public Behavior
+// Baiter ----------
+
+// Baiter Wins
+
+class ExitDetected : public Behavior
 {
 public:
 
-	AtWanderTarget(float a_range) : range2(a_range*a_range) {}
-	virtual ~AtWanderTarget() {}
+	ExitDetected(float a_range) : range2(a_range*a_range) {}
+	virtual ~ExitDetected() {}
 
 	virtual Status execute(Agent* agent)
 	{
-		float dist2 = glm::distance2(agent->getPosition(), agent->getTarget());
+		float dist2 = glm::distance2(agent->getPosition(), exitLoc);
 
 		if (dist2 <= range2)
+		{
+			agent->setTarget(exitLoc);
 			return SUCCESS;
+		}
 
 		return FAILURE;
 	}
@@ -191,21 +333,27 @@ public:
 	float range2;
 };
 
-class HaveWanderTarget : public Behavior
+class LayBait : public Behavior
 {
 public:
 
-	HaveWanderTarget() {}
-	virtual ~HaveWanderTarget() {}
+	LayBait() {}
+	virtual ~LayBait() {}
 
 	virtual Status execute(Agent* agent)
 	{
-		if (agent->getTarget() != glm::vec3(NULL))
+		for (int f = 1; f != 20; f++)
 		{
-			std::cout << "Has Wander Target\n";
-			return SUCCESS;
+			if (!allFood[f].alive)
+			{
+				allFood[f].alive = true;
+				allFood[f].position = agent->getPosition();
+
+				agent->setTreePaused(true); // time to prepare more bait
+
+				return SUCCESS;
+			}
 		}
-		std::cout << "Has NO Wander Target\n";
 		return FAILURE;
 	}
 };
@@ -241,17 +389,21 @@ bool AI_Assessment::onCreate(int a_argc, char* a_argv[])
 
 	// Ian Code ====================
 
+
 	monster = new Agent();
 
+
+// vvv Monster vvvvvvvvvvvvvvvvvvvvvvvvvvv
+	Behavior* eatingNow = new Timer(3);
 //--------------
 	Behavior* isAtFood = new AtFood(0.5f);
-	Behavior* eatFood = new Timer("eatFood", 5000);
+	Behavior* eatFood = new TriggerTreePause();
 
 	Sequence* eatingCheck = new Sequence();
 	eatingCheck->addChild(isAtFood);
 	eatingCheck->addChild(eatFood);
 //--------------
-	Behavior* isFoodClose = new ClosestFoodDetected(5);
+	Behavior* isFoodClose = new ClosestFoodDetected(8);
 	Behavior* seekFood = new SeekTarget(5);
 
 	Sequence* towardsFood = new Sequence();
@@ -265,15 +417,15 @@ bool AI_Assessment::onCreate(int a_argc, char* a_argv[])
 	waypointCheck->addChild(isAtWanderTarget);
 	waypointCheck->addChild(getWander);
 //-------------
-	Behavior* haveWander = new HaveWanderTarget();
+	Behavior* haveMoveTarget = new HaveMovementTarget();
 	Behavior* seekWander = new SeekTarget(3);
 
-	Sequence* towardsWander = new Sequence();
-	towardsWander->addChild(haveWander);
-	towardsWander->addChild(seekWander);
+	Sequence* towardsMoveTarget = new Sequence();
+	towardsMoveTarget->addChild(haveMoveTarget);
+	towardsMoveTarget->addChild(seekWander);
 //------------
 	Selector* target = new Selector();
-	target->addChild(towardsWander);
+	target->addChild(towardsMoveTarget);
 	target->addChild(getWander);
 //------------
 	Selector* wander = new Selector();
@@ -284,9 +436,13 @@ bool AI_Assessment::onCreate(int a_argc, char* a_argv[])
 	findFood->addChild(towardsFood);
 	findFood->addChild(wander);
 //----------
+	Selector* subRoot = new Selector();
+	subRoot->addChild(eatingCheck);
+	subRoot->addChild(findFood);
+//---------
 	Selector* root = new Selector();
-	root->addChild(eatingCheck);
-	root->addChild(findFood);
+	root->addChild(eatingNow);
+	root->addChild(subRoot);
 //---------
 
 	monsterBehavior = root;
@@ -303,12 +459,18 @@ bool AI_Assessment::onCreate(int a_argc, char* a_argv[])
 	// temp food 
 
 	Food food1 = { glm::vec3(5,0,7), true };
-	Food food2 = { glm::vec3(2, 0, 4), true };
-	Food food3 = { glm::vec3(9, 0, 9), true };
+	//Food food2 = { glm::vec3(2, 0, 4), true };
+	Food food3 = { glm::vec3(-9, 0, -9), true };
+	Food food4 = { glm::vec3(-2, 0, 7), true };
+	//Food food5 = { glm::vec3(5, 0, 3), true };
+	//Food food6 = { glm::vec3(-3, 0, -4), true };
 
 	allFood[1] = food1;
-	allFood[2] = food2;
+	//allFood[2] = food2;
 	allFood[3] = food3;
+	allFood[4] = food4;
+	//allFood[5] = food5;
+	//allFood[6] = food6;
 
 	// ============================
 
