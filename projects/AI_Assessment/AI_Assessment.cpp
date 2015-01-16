@@ -610,6 +610,9 @@ void AI_Assessment::onUpdate(float a_deltaTime)
 	// quit our application when escape is pressed
 	if (glfwGetKey(m_window,GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		quit();
+
+
+
 }
 
 void AI_Assessment::onDraw() 

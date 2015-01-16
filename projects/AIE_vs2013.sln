@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
-VisualStudioVersion = 12.0.30723.0
+VisualStudioVersion = 12.0.21005.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AIEFramework", "AIEFramework\AIEFramework_vs2013.vcxproj", "{BBD02D30-A9A5-41ED-9C12-67EC17B5C08B}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -32,6 +32,16 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Topic_06_GoalOrientedBehavi
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AI_Assessment", "AI_Assessment\AI_Assessment.vcxproj", "{82D4E2C0-7108-43F5-853E-D04757BDE7CD}"
+	ProjectSection(ProjectDependencies) = postProject
+		{BBD02D30-A9A5-41ED-9C12-67EC17B5C08B} = {BBD02D30-A9A5-41ED-9C12-67EC17B5C08B}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Networking_Client", "Networking_Client\Networking_Client.vcxproj", "{BF172720-C89E-4C6C-9B08-74FAC5D1774A}"
+	ProjectSection(ProjectDependencies) = postProject
+		{BBD02D30-A9A5-41ED-9C12-67EC17B5C08B} = {BBD02D30-A9A5-41ED-9C12-67EC17B5C08B}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Networking_Server", "Networking_Server\Networking_Server.vcxproj", "{8CFDDB7A-B48A-440A-98A8-E19F23460B83}"
 	ProjectSection(ProjectDependencies) = postProject
 		{BBD02D30-A9A5-41ED-9C12-67EC17B5C08B} = {BBD02D30-A9A5-41ED-9C12-67EC17B5C08B}
 	EndProjectSection
@@ -78,6 +88,14 @@ Global
 		{82D4E2C0-7108-43F5-853E-D04757BDE7CD}.Debug|Win32.Build.0 = Debug|Win32
 		{82D4E2C0-7108-43F5-853E-D04757BDE7CD}.Release|Win32.ActiveCfg = Release|Win32
 		{82D4E2C0-7108-43F5-853E-D04757BDE7CD}.Release|Win32.Build.0 = Release|Win32
+		{BF172720-C89E-4C6C-9B08-74FAC5D1774A}.Debug|Win32.ActiveCfg = Debug|Win32
+		{BF172720-C89E-4C6C-9B08-74FAC5D1774A}.Debug|Win32.Build.0 = Debug|Win32
+		{BF172720-C89E-4C6C-9B08-74FAC5D1774A}.Release|Win32.ActiveCfg = Release|Win32
+		{BF172720-C89E-4C6C-9B08-74FAC5D1774A}.Release|Win32.Build.0 = Release|Win32
+		{8CFDDB7A-B48A-440A-98A8-E19F23460B83}.Debug|Win32.ActiveCfg = Debug|Win32
+		{8CFDDB7A-B48A-440A-98A8-E19F23460B83}.Debug|Win32.Build.0 = Debug|Win32
+		{8CFDDB7A-B48A-440A-98A8-E19F23460B83}.Release|Win32.ActiveCfg = Release|Win32
+		{8CFDDB7A-B48A-440A-98A8-E19F23460B83}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
