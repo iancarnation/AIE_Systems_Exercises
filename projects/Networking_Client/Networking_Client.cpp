@@ -17,6 +17,8 @@ enum MESSAGE_HEADER
 {
 	HEADER_HELLO_WORLD = ID_USER_PACKET_ENUM + 1,
 	HEADER_HELLO_WORLD_RESPONSE,
+	ID_THING1,
+
 };
 
 Networking_Client::Networking_Client()

@@ -4,6 +4,7 @@
 #include <glm/glm.hpp>
 
 #include "RakPeerInterface.h"
+#include <NetworkIDObject.h>
 
 // derived application class that wraps up all globals neatly
 class Networking_Client : public Application
@@ -25,4 +26,17 @@ protected:
 
 	RakNet::RakPeerInterface* Interface;
 	RakNet::SystemAddress ServerAddress;
+
+#pragma pack(push, 1)
+	struct Thing : public RakNet::NetworkIDObject
+	{
+		unsigned char useTimeStamp;		// assign ID_TIMESTAMP to this
+		RakNet::Time timeStamp;			// put the system time in here returned by rn::GetTime()
+		unsigned char typeId;			// an enum defined after the last on e in MessageIdentifiers.h e.g. ID_SET_TIMED_MINE
+		glm::vec3 position;
+		RakNet::NetworkID networkID;
+		RakNet::SystemAddress systemAddress;	// address of the client that owns thing
+	};
+#pragma pack(pop)
+
 };
