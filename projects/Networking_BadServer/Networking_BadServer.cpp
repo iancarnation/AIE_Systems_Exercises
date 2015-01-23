@@ -23,7 +23,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	const int SERVER_PORT = 12001;
 
 	// simulate lost packets for a bad network
-	float packetLoss = 0.70f;
+	//float packetLoss = 0.70f;
 
 	// start server
 	RakNet::RakPeerInterface* raknet = RakNet::RakPeerInterface::GetInstance();
@@ -84,16 +84,21 @@ int _tmain(int argc, _TCHAR* argv[])
 			}
 			default:
 			{
-				if (packet->data[0] >= ID_USER_CUSTOM_DATA)
-				{
-					// just send the data on!
-					if ((rand() / (float)RAND_MAX) >= packetLoss)
-					{
-						RakNet::BitStream outStream(packet->data, packet->length, false);
-						raknet->Send(&outStream, MEDIUM_PRIORITY, UNRELIABLE, 0, packet->systemAddress, true);
-					}
-				}
+				RakNet::BitStream outStream(packet->data, packet->length, false);
+				raknet->Send(&outStream, MEDIUM_PRIORITY, UNRELIABLE, 0, packet->systemAddress, true);
 			}
+			//default:
+			//{
+			//	if (packet->data[0] >= ID_USER_CUSTOM_DATA)
+			//	{
+			//		// just send the data on!
+			//		if ((rand() / (float)RAND_MAX) >= packetLoss)
+			//		{
+			//			RakNet::BitStream outStream(packet->data, packet->length, false);
+			//			raknet->Send(&outStream, MEDIUM_PRIORITY, UNRELIABLE, 0, packet->systemAddress, true);
+			//		}
+			//	}
+			//}
 				break;
 			};
 

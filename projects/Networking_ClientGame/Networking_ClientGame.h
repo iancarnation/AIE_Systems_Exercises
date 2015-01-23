@@ -14,6 +14,12 @@ public:
 	Networking_ClientGame();
 	virtual ~Networking_ClientGame();
 
+	struct Player
+	{
+		glm::vec3 position;
+		glm::vec4 color;
+	};
+
 protected:
 
 	virtual bool onCreate(int a_argc, char* a_argv[]);
@@ -22,7 +28,8 @@ protected:
 	virtual void onDestroy();
 
 	int myID;
-	std::map<int, glm::vec3> players;
+	//std::map<int, glm::vec3> players;
+	std::map<int, Player*> players;
 
 	RakNet::SystemAddress serverAddress;
 	RakNet::RakPeerInterface* raknet;

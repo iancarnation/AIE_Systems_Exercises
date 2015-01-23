@@ -100,14 +100,16 @@ void Networking_ClientGame::onUpdate(float a_deltaTime)
 			input.IgnoreBytes(1);
 
 			input.Read(myID);
-			players[myID] = glm::vec3(0);
+			//players[myID] = glm::vec3(0);
+			players[myID] = new Player{ glm::vec3(0), glm::vec4(1, 1, 0, 1) };
 
 			printf("My ID: %i\n", myID);
 
 			int id = -1;
 			while (input.Read(id))
 			{
-				players[id] = glm::vec3(0);
+				//players[id] = glm::vec3(0);
+				players[id] = new Player{ glm::vec3(0), glm::vec4(1, 1, 0, 1) };
 			}
 			break;
 		}
@@ -118,7 +120,8 @@ void Networking_ClientGame::onUpdate(float a_deltaTime)
 			int id = -1;
 			input.Read(id);
 			printf("New player connected: %i\n", id);
-			players[id] = glm::vec3(0);
+			//players[id] = glm::vec3(0);
+			players[id] = new Player{ glm::vec3(0), glm::vec4(1, 1, 0, 1) };
 			break;
 		}
 		case ID_USER_CLIENT_DISCONNECTED:
@@ -141,7 +144,7 @@ void Networking_ClientGame::onUpdate(float a_deltaTime)
 			input.Read(id);
 			glm::vec3 pos(0);
 			input.Read(pos);
-			players[id] = pos;
+			players[id]->position = pos;
 			break;
 		}
 		};
@@ -166,22 +169,32 @@ void Networking_ClientGame::onUpdate(float a_deltaTime)
 
 		if (glm::length2(movement) > 0)
 		{
-			players[myID] = players[myID] + glm::normalize(movement) * a_deltaTime * 5.0f;
+			players[myID]->position = players[myID]->position + glm::normalize(movement) * a_deltaTime * 5.0f;
 
 			RakNet::BitStream output;
 			output.Write((unsigned char)ID_USER_POSITION);
 			output.Write(myID);
-			output.Write(players[myID]);
+			output.Write(players[myID]->position);
 
 			raknet->Send(&output, HIGH_PRIORITY, RELIABLE_ORDERED, 0, serverAddress, false);
 		}
+
+		// if space is pressed
+		// fireball at other player
+		// if id=0, get vector towards 1
+		// otherwise, get vector towards 0
+		//if (glfwGetKey(m_window, GLFW_KEY_SPACE) == GLFW_PRESS)
+
+
+
+		// if fireball hits, change color
 
 	}
 
 
 
-	for (auto& player : players)
-		Gizmos::addAABBFilled(player.second, glm::vec3(0.5f), glm::vec4(1, 1, 0, 1));
+	for (auto player : players)
+		Gizmos::addAABBFilled(player.second->position, glm::vec3(0.5f), glm::vec4(1, 1, 0, 1));
 
 
 	// quit our application when escape is pressed
