@@ -20,6 +20,7 @@ enum MESSAGE_ID
 	ID_USER_CUSTOM_DATA, 
 
 	ID_USER_POSITION = ID_USER_CUSTOM_DATA,
+	ID_FIREBALL_POSITION,
 };
 
 const int SERVER_PORT = 12001;
@@ -57,6 +58,8 @@ bool Networking_ClientGame::onCreate(int a_argc, char* a_argv[])
 	raknet->Connect("127.0.0.1", SERVER_PORT, nullptr, 0);
 
 	myID = -1;
+
+	fireballs = new Fireball[2];
 
 	return true;
 }
@@ -101,7 +104,7 @@ void Networking_ClientGame::onUpdate(float a_deltaTime)
 
 			input.Read(myID);
 			//players[myID] = glm::vec3(0);
-			players[myID] = new Player{ glm::vec3(0), glm::vec4(1, 1, 0, 1) };
+			players[myID] = new Player();
 
 			printf("My ID: %i\n", myID);
 
@@ -109,7 +112,7 @@ void Networking_ClientGame::onUpdate(float a_deltaTime)
 			while (input.Read(id))
 			{
 				//players[id] = glm::vec3(0);
-				players[id] = new Player{ glm::vec3(0), glm::vec4(1, 1, 0, 1) };
+				players[id] = new Player();
 			}
 			break;
 		}
@@ -121,7 +124,7 @@ void Networking_ClientGame::onUpdate(float a_deltaTime)
 			input.Read(id);
 			printf("New player connected: %i\n", id);
 			//players[id] = glm::vec3(0);
-			players[id] = new Player{ glm::vec3(0), glm::vec4(1, 1, 0, 1) };
+			players[id] = new Player();
 			break;
 		}
 		case ID_USER_CLIENT_DISCONNECTED:
@@ -145,6 +148,23 @@ void Networking_ClientGame::onUpdate(float a_deltaTime)
 			glm::vec3 pos(0);
 			input.Read(pos);
 			players[id]->position = pos;
+			break;
+		}
+		case ID_FIREBALL_POSITION:
+		{
+			RakNet::BitStream input(packet->data, packet->length, true);
+			input.IgnoreBytes(1);
+			int id = -1;
+			input.Read(id);
+			glm::vec3 pos(0);
+			input.Read(pos);
+			fireballs[id].position = pos;
+			float rad;
+			input.Read(rad);
+			fireballs[id].radius = rad;
+			bool a;
+			input.Read(a);
+			fireballs[id].alive = a;
 			break;
 		}
 		};
@@ -183,19 +203,65 @@ void Networking_ClientGame::onUpdate(float a_deltaTime)
 		// fireball at other player
 		// if id=0, get vector towards 1
 		// otherwise, get vector towards 0
-		//if (glfwGetKey(m_window, GLFW_KEY_SPACE) == GLFW_PRESS)
+		if (glfwGetKey(m_window, GLFW_KEY_SPACE) == GLFW_PRESS)
+		{
+			if (!fireballs[myID].alive)
+			{
+				fireballs[myID].alive = true;
+				fireballs[myID].position = players[myID]->position;
+			}
 
+		}
 
+		if (fireballs[0].alive)
+		{
+			// seek other player
+			glm::vec3 dir = glm::normalize(players[1]->position - fireballs[0].position);
+			fireballs[0].position = glm::vec3(fireballs[0].position + dir * fireballs[0].speed * Utility::getDeltaTime());
+		
+			RakNet::BitStream output;
+			output.Write((unsigned char)ID_FIREBALL_POSITION);
+			output.Write(myID);
+			output.Write(fireballs[myID].position);
+			output.Write(fireballs[myID].radius);
+			output.Write(fireballs[myID].alive);
+
+			raknet->Send(&output, HIGH_PRIORITY, RELIABLE_ORDERED, 0, serverAddress, false);
+		}
+		
+		if (fireballs[1].alive)
+		{
+			// seek other player
+			glm::vec3 dir = glm::normalize(players[0]->position - fireballs[1].position);
+			fireballs[1].position = glm::vec3(fireballs[1].position + dir * fireballs[1].speed * Utility::getDeltaTime());
+			
+			RakNet::BitStream output;
+			output.Write((unsigned char)ID_FIREBALL_POSITION);
+			output.Write(myID);
+			output.Write(fireballs[myID].position);
+			output.Write(fireballs[myID].radius);
+			output.Write(fireballs[myID].alive);
+
+			raknet->Send(&output, HIGH_PRIORITY, RELIABLE_ORDERED, 0, serverAddress, false);
+
+		}
 
 		// if fireball hits, change color
 
 	}
 
-
-
-	for (auto player : players)
+	for (auto &player : players)
 		Gizmos::addAABBFilled(player.second->position, glm::vec3(0.5f), glm::vec4(1, 1, 0, 1));
 
+	for (int i = 0; i < 2; i++)
+	{
+		if (fireballs[i].alive)
+		{
+			if (fireballs[i].radius <= 5.0f)
+				fireballs[i].radius += 0.1f * Utility::getDeltaTime();
+			Gizmos::addSphere(fireballs[i].position, fireballs[i].radius, 10, 10, glm::vec4(1, 0, 0, 1));
+		}
+	}
 
 	// quit our application when escape is pressed
 	if (glfwGetKey(m_window,GLFW_KEY_ESCAPE) == GLFW_PRESS)

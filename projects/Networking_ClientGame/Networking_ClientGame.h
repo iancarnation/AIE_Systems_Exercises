@@ -18,6 +18,18 @@ public:
 	{
 		glm::vec3 position;
 		glm::vec4 color;
+
+		Player() : position(glm::vec3(0)), color(glm::vec4(1, 1, 0, 1)) {}
+	};
+
+	struct Fireball
+	{
+		glm::vec3 position;
+		float radius;
+		float speed;
+		bool alive;
+
+		Fireball() :  position(glm::vec3(0)), radius(0.1f), speed(2.0f), alive(false) {}	
 	};
 
 protected:
@@ -30,6 +42,8 @@ protected:
 	int myID;
 	//std::map<int, glm::vec3> players;
 	std::map<int, Player*> players;
+
+	Fireball* fireballs;
 
 	RakNet::SystemAddress serverAddress;
 	RakNet::RakPeerInterface* raknet;
